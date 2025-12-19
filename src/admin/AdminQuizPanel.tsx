@@ -111,7 +111,6 @@ export default function AdminQuizPanel() {
       const deletePromises = snapshot.docs.map((doc) => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
       
-      console.log(`✅ Cleared ${snapshot.docs.length} responses`);
       setError(null);
     } catch (err) {
       console.error("Failed to clear responses:", err);

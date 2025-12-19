@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { env } from "../lib/env";
+import { savePhotoUrl } from "../lib/photoStorage";
 
-const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
+interface UploadPhotoProps {
+  onUploadSuccess?: () => void;
+  uploadsEnabled?: boolean;
+}
+
+const CLOUD_NAME = env.CLOUDINARY_NAME;
 const UPLOAD_PRESET = "Unsigned_preset"; // Create this in Cloudinary dashboard
 
 // Helper to compress image before upload
@@ -52,7 +59,7 @@ function compressImage(file: File, maxWidth = 1920, maxHeight = 1080, quality = 
   });
 }
 
-export default function UploadPhoto() {
+export default function UploadPhoto({ onUploadSuccess, uploadsEnabled = true }: UploadPhotoProps = {}) {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
@@ -76,24 +83,30 @@ export default function UploadPhoto() {
       setStatus("Compressing image...");
       const compressedFile = await compressImage(file);
 
-      setStatus("Uploading...");
-      const formData = new FormData();
-      formData.append("file", compressedFile);
-      formData.append("upload_preset", UPLOAD_PRESET);
-
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setUploadedUrl(data.secure_url);
-        setStatus("Uploaded!");
-      } else {
-        setStatus(data.error?.message || "Upload failed");
-      }
+      setStatus("Preparing for review...");
+      // Convert to base64 data URL for temporary storage
+      const reader = new FileReader();
+      reader.readAsDataURL(compressedFile);
+      
+      reader.onload = async () => {
+        const base64DataUrl = reader.result as string;
+        
+        setStatus("Saving for admin approval...");
+        await savePhotoUrl(base64DataUrl, file.name);
+        
+        setUploadedUrl(base64DataUrl);
+        setStatus("Submitted for approval!");
+        setFile(null);
+        
+        // Call the success callback
+        if (onUploadSuccess) {
+          onUploadSuccess();
+        }
+      };
+      
+      reader.onerror = () => {
+        setStatus("Failed to process image");
+      };
     } catch (err) {
       console.error(err);
       setStatus("Error during compression or upload");
@@ -102,6 +115,11 @@ export default function UploadPhoto() {
 
   return (
     <div>
+      {!uploadsEnabled && (
+        <div style={{ padding: 12, marginBottom: 12, backgroundColor: "#ff9800", color: "#000", borderRadius: 4 }}>
+          ⚠️ Photo uploads are currently disabled by the admin.
+        </div>
+      )}
       <form
         onSubmit={onSubmit}
         style={{ display: "flex", gap: 12, alignItems: "center" }}
@@ -111,8 +129,9 @@ export default function UploadPhoto() {
           accept="image/*"
           capture="environment"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          disabled={!uploadsEnabled}
         />
-        <button className="primary" type="submit" disabled={!file}>
+        <button className="primary" type="submit" disabled={!file || !uploadsEnabled}>
           Upload
         </button>
       </form>
@@ -134,24 +153,8 @@ export default function UploadPhoto() {
       )}
 
       {uploadedUrl && (
-        <div style={{ marginTop: 10 }}>
-          <div>Live image URL (Cloudinary public link):</div>
-          <a
-            href={uploadedUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#8fe" }}
-          >
-            {uploadedUrl}
-          </a>
-          <div style={{ marginTop: 8 }}>
-            <img
-              className="upload-preview"
-              src={uploadedUrl}
-              alt="uploaded"
-              style={{ maxWidth: "300px", maxHeight: "300px" }}
-            />
-          </div>
+        <div style={{ marginTop: 10, color: "#4caf50" }}>
+          ✓ Photo uploaded successfully! It will appear in the gallery below.
         </div>
       )}
     </div>

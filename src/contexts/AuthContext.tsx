@@ -10,6 +10,7 @@ import {
   AuthError,
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
+import { env } from "../lib/env";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -52,7 +53,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const unsubscribe = onAuthStateChanged(
       auth,
       async (user) => {
-        console.log("🔐 Auth state changed:", user ? `User: ${user.email || user.uid}` : "No user");
         setCurrentUser(user);
         
         if (user) {
@@ -62,17 +62,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const isAdminClaim = tokenResult.claims.admin === true;
             
             // Also check if email matches admin email from env
-            const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "admin@example.com";
+            const adminEmail = env.ADMIN_EMAIL;
             const isAdminEmail = user.email ? user.email === adminEmail : false;
             
             const adminStatus = isAdminClaim || isAdminEmail;
-            console.log("👤 Admin check:", { 
-              email: user.email, 
-              isAnonymous: user.isAnonymous,
-              isAdminClaim, 
-              isAdminEmail, 
-              adminStatus 
-            });
             setIsAdmin(adminStatus);
           } catch (err) {
             console.error("Failed to get ID token:", err);
@@ -82,7 +75,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsAdmin(false);
         }
         
-        console.log("✅ Auth loading complete");
         setIsLoading(false);
       },
       (err) => {
@@ -103,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const refreshInterval = setInterval(async () => {
       try {
         await currentUser.getIdToken(true);
-        console.log("🔄 Token refreshed");
+
       } catch (err) {
         console.error("Token refresh failed:", err);
       }

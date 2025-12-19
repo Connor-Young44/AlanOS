@@ -50,7 +50,6 @@ export default function QuizProjector() {
         }
       });
 
-      console.log("📊 Projector votes updated:", counts, "Total:", total);
       setVotes(counts);
       setTotalVotes(total);
     });

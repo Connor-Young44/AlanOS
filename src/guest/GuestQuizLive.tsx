@@ -33,11 +33,32 @@ export default function GuestQuizLive() {
 
   if (activeIdx === null) {
     return (
-      <div className="quiz" style={{ textAlign: "center", padding: "40px 20px" }}>
-        <h2>🎯 Live Quiz</h2>
-        <p style={{ color: "#888", marginTop: 20 }}>
+      <div className="quiz" style={{ 
+        textAlign: "center", 
+        padding: "60px 20px",
+        minHeight: "60vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
+        <div style={{
+          fontSize: 64,
+          marginBottom: 20,
+          animation: "pulse 2s infinite"
+        }}>🎯</div>
+        <h2 style={{ fontSize: 24, marginBottom: 16, fontWeight: 600 }}>Live Quiz</h2>
+        <p style={{ color: "#888", fontSize: 16, lineHeight: 1.6 }}>
           Waiting for the host to start a question...
         </p>
+        <style>
+          {`
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.1); }
+            }
+          `}
+        </style>
       </div>
     );
   }
@@ -65,8 +86,22 @@ export default function GuestQuizLive() {
   };
 
   return (
-    <div className="quiz">
-      <h2 style={{ marginBottom: 20, fontSize: 20 }}>{q.q}</h2>
+    <div className="quiz" style={{ maxWidth: 600, margin: "0 auto" }}>
+      <div style={{
+        backgroundColor: "rgba(25, 118, 210, 0.1)",
+        border: "2px solid rgba(25, 118, 210, 0.3)",
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 24
+      }}>
+        <h2 style={{ 
+          marginBottom: 0, 
+          fontSize: 18,
+          lineHeight: 1.5,
+          fontWeight: 600,
+          color: "#fff"
+        }}>{q.q}</h2>
+      </div>
 
       {q.opts.map((option, i) => {
         let bgColor = "";
@@ -94,34 +129,83 @@ export default function GuestQuizLive() {
               disabled={hasVoted || reveal}
               style={{
                 width: "100%",
-                padding: "14px",
-                fontSize: 15,
+                padding: "18px 20px",
+                fontSize: 16,
+                fontWeight: 500,
                 backgroundColor: bgColor || "#1a1a1a",
-                border: borderColor ? `2px solid ${borderColor}` : "1px solid #333",
+                border: borderColor ? `3px solid ${borderColor}` : "2px solid #333",
+                borderRadius: 12,
                 color: "#fff",
                 cursor: hasVoted || reveal ? "default" : "pointer",
-                opacity: hasVoted || reveal ? 0.8 : 1,
-                transition: "all 0.2s ease",
+                opacity: hasVoted || reveal ? 0.9 : 1,
+                transition: "all 0.3s ease",
+                textAlign: "left",
+                position: "relative",
+                boxShadow: borderColor ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
+                transform: hasVoted && selectedAnswer === i ? "scale(0.98)" : "scale(1)"
               }}
             >
-              {option}
-              {reveal && i === q.answerIndex && " ✓"}
+              <span style={{ paddingRight: 30 }}>{option}</span>
+              {reveal && i === q.answerIndex && (
+                <span style={{ 
+                  position: "absolute",
+                  right: 20,
+                  fontSize: 24
+                }}>✓</span>
+              )}
             </button>
           </div>
         );
       })}
 
       {hasVoted && !reveal && (
-        <p style={{ color: "#4a9eff", marginTop: 20, textAlign: "center" }}>
-          ✓ Your answer has been recorded!
-        </p>
+        <div style={{ 
+          backgroundColor: "rgba(74, 158, 255, 0.15)",
+          border: "2px solid #4a9eff",
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 24,
+          textAlign: "center",
+          animation: "slideIn 0.3s ease-out"
+        }}>
+          <span style={{ fontSize: 20, marginRight: 8 }}>✓</span>
+          <span style={{ color: "#4a9eff", fontSize: 16, fontWeight: 500 }}>
+            Your answer has been recorded!
+          </span>
+        </div>
       )}
 
       {reveal && (
-        <p style={{ color: "#4caf50", marginTop: 20, textAlign: "center", fontWeight: 600 }}>
-          Correct answer revealed!
-        </p>
+        <div style={{ 
+          backgroundColor: "rgba(76, 175, 80, 0.15)",
+          border: "2px solid #4caf50",
+          borderRadius: 12,
+          padding: 16,
+          marginTop: 24,
+          textAlign: "center",
+          animation: "slideIn 0.3s ease-out"
+        }}>
+          <span style={{ fontSize: 20, marginRight: 8 }}>🎉</span>
+          <span style={{ color: "#4caf50", fontSize: 16, fontWeight: 600 }}>
+            Correct answer revealed!
+          </span>
+        </div>
       )}
+      
+      <style>
+        {`
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }

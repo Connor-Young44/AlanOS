@@ -20,6 +20,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Photo upload state - anyone can read, only admins can write
+    match /photo_upload/state {
+      allow read: if true;  // Guests need to see if uploads are enabled
+      allow write: if isAdmin();
+    }
+    
     // All other quiz documents
     match /quiz/{docId} {
       allow read: if true;
@@ -42,6 +48,13 @@ service cloud.firestore {
     match /photos/{photoId} {
       allow read: if true;  // Everyone can see photos
       allow create: if isAuthenticated();  // Guests can upload
+      allow update, delete: if isAdmin();  // Only admin can moderate
+    }
+    
+    // Uploaded photos from Cloudinary (URLs stored here)
+    match /uploaded_photos/{photoId} {
+      allow read: if isAdmin();  // Only admin can see photos in gallery
+      allow create: if isAuthenticated();  // Guests can upload photos
       allow update, delete: if isAdmin();  // Only admin can moderate
     }
     

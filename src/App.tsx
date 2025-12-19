@@ -7,6 +7,7 @@ import LeaveMessage from "./components/LeaveMessage";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminLogin from "./components/AdminLogin";
 import QuizProjector from "./components/QuizProjector";
+import PhotoProjector from "./components/PhotoProjector";
 import { useAuth } from "./contexts/AuthContext";
 
 type View = "admin" | "loading" | "menu" | "quiz" | "upload" | "message";
@@ -14,7 +15,8 @@ type View = "admin" | "loading" | "menu" | "quiz" | "upload" | "message";
 export default function App() {
   const [view, setView] = useState<View>("loading");
   const [requestedAdmin, setRequestedAdmin] = useState(false);
-  const [isProjector, setIsProjector] = useState(false);
+  const [isQuizProjector, setIsQuizProjector] = useState(false);
+  const [isPhotoProjector, setIsPhotoProjector] = useState(false);
   const { currentUser, isAdmin, isLoading: authLoading, signInAnonymously, signOut, error: authError } = useAuth();
 
   useEffect(() => {
@@ -22,7 +24,12 @@ export default function App() {
     const path = window.location.pathname;
     
     if (path === "/projector") {
-      setIsProjector(true);
+      setIsQuizProjector(true);
+      return;
+    }
+    
+    if (path === "/photo-projector") {
+      setIsPhotoProjector(true);
       return;
     }
     
@@ -58,20 +65,13 @@ export default function App() {
     }
   }, [authLoading, currentUser, requestedAdmin, signInAnonymously]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log("🔍 App state:", { 
-      authLoading, 
-      currentUser: currentUser?.email || currentUser?.uid?.slice(0,8), 
-      isAdmin, 
-      requestedAdmin, 
-      view 
-    });
-  }, [authLoading, currentUser, isAdmin, requestedAdmin, view]);
-
-  // Projector view (full screen quiz display)
-  if (isProjector) {
+  // Projector views (full screen displays)
+  if (isQuizProjector) {
     return <QuizProjector />;
+  }
+
+  if (isPhotoProjector) {
+    return <PhotoProjector />;
   }
 
   // Show loading spinner while auth is initializing
