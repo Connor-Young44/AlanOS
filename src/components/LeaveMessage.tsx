@@ -10,6 +10,8 @@ import {
   serverTimestamp,
   DocumentData,
   QuerySnapshot,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -34,6 +36,23 @@ export default function LeaveMessage() {
   const [message, setMessage] = useState("");
   const [list, setList] = useState<Msg[]>([]);
   const [status, setStatus] = useState<string>("");
+  const [messagesEnabled, setMessagesEnabled] = useState<boolean>(true);
+
+  // Check if messages are enabled
+  useEffect(() => {
+    const checkMessagesState = async () => {
+      try {
+        const docRef = doc(db, "messages_state", "config");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setMessagesEnabled(docSnap.data().enabled ?? true);
+        }
+      } catch (error) {
+        console.error("Error checking messages state:", error);
+      }
+    };
+    checkMessagesState();
+  }, []);
 
   useEffect(() => {
     // Query messages ordered by creation date ascending
@@ -61,6 +80,10 @@ export default function LeaveMessage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!messagesEnabled) {
+      setStatus("Messages are currently disabled.");
+      return;
+    }
     if (!message.trim()) {
       setStatus("Message cannot be empty.");
       return;
@@ -92,6 +115,21 @@ export default function LeaveMessage() {
         <h3 style={{ margin: 0, marginBottom: 4, fontSize: 18, fontWeight: 600 }}>💬 Leave a Message</h3>
         <p style={{ margin: 0, fontSize: 14, color: "#888" }}>Share your thoughts with everyone</p>
       </div>
+      
+      {!messagesEnabled && (
+        <div style={{
+          padding: 16,
+          marginBottom: 16,
+          backgroundColor: "rgba(244, 67, 54, 0.1)",
+          border: "2px solid #f44336",
+          borderRadius: 8,
+          color: "#f44336",
+          textAlign: "center",
+          fontWeight: 500
+        }}>
+          ⚠️ Messages are currently disabled by the admin.
+        </div>
+      )}
       
       <form onSubmit={onSubmit} style={{ 
         display: "flex", 
@@ -133,11 +171,14 @@ export default function LeaveMessage() {
         <button 
           className="primary" 
           type="submit"
+          disabled={!messagesEnabled}
           style={{
             padding: 16,
             fontSize: 16,
             fontWeight: 600,
-            borderRadius: 8
+            borderRadius: 8,
+            opacity: messagesEnabled ? 1 : 0.5,
+            cursor: messagesEnabled ? "pointer" : "not-allowed"
           }}
         >
           Send Message

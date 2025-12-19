@@ -26,6 +26,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Messages state - anyone can read, only admins can write
+    match /messages_state/config {
+      allow read: if true;  // Guests need to see if messages are enabled
+      allow write: if isAdmin();
+    }
+    
+    // Helper function to check if messages are enabled
+    function messagesEnabled() {
+      return get(/databases/$(database)/documents/messages_state/config).data.enabled == true;
+    }
+    
     // All other quiz documents
     match /quiz/{docId} {
       allow read: if true;
@@ -36,6 +47,7 @@ service cloud.firestore {
     match /messages/{messageId} {
       allow read: if true;  // Everyone can read messages (it's a wedding!)
       allow create: if isAuthenticated() && 
+                       messagesEnabled() &&  // Check if messages are enabled
                        request.resource.data.keys().hasAll(['name', 'message', 'createdAt']) &&
                        request.resource.data.name is string &&
                        request.resource.data.message is string &&

@@ -99,6 +99,7 @@ export default function AdminDashboard() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploadsEnabled, setUploadsEnabled] = useState<boolean>(true);
+  const [messagesEnabled, setMessagesEnabled] = useState<boolean>(true);
   const [photoLimit, setPhotoLimit] = useState<number>(50);
   const [hasMore, setHasMore] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<Array<Photo & { docId: string }>>([]);
@@ -110,6 +111,9 @@ export default function AdminDashboard() {
       loadPhotos();
       loadPendingPhotos();
       loadUploadState();
+    }
+    if (activeTab === "messages") {
+      loadMessagesState();
     }
   }, [activeTab]);
 
@@ -133,6 +137,29 @@ export default function AdminDashboard() {
       setUploadsEnabled(newState);
     } catch (error) {
       console.error("Error toggling uploads:", error);
+    }
+  }
+
+  async function loadMessagesState() {
+    try {
+      const docRef = doc(db, "messages_state", "config");
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setMessagesEnabled(docSnap.data().enabled ?? true);
+      }
+    } catch (error) {
+      console.error("Error loading messages state:", error);
+    }
+  }
+
+  async function toggleMessages() {
+    try {
+      const newState = !messagesEnabled;
+      const docRef = doc(db, "messages_state", "config");
+      await setDoc(docRef, { enabled: newState });
+      setMessagesEnabled(newState);
+    } catch (error) {
+      console.error("Error toggling messages:", error);
     }
   }
 
@@ -379,7 +406,32 @@ export default function AdminDashboard() {
 
       {activeTab === "messages" && (
         <div>
-          <h2>💬 Guest Messages</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <h2 style={{ margin: 0 }}>💬 Guest Messages</h2>
+            <button
+              className="primary"
+              onClick={toggleMessages}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: messagesEnabled ? "#d32f2f" : "#4caf50",
+              }}
+            >
+              {messagesEnabled ? "🚫 Disable Messages" : "✅ Enable Messages"}
+            </button>
+          </div>
+          {!messagesEnabled && (
+            <div style={{
+              padding: 12,
+              marginBottom: 16,
+              backgroundColor: "rgba(244, 67, 54, 0.1)",
+              border: "2px solid #f44336",
+              borderRadius: 8,
+              color: "#f44336",
+              textAlign: "center"
+            }}>
+              ⚠️ Messages are currently disabled. Guests cannot submit new messages.
+            </div>
+          )}
           <MessagesList />
         </div>
       )}
