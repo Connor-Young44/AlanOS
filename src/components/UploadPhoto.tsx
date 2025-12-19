@@ -127,7 +127,6 @@ export default function UploadPhoto({ onUploadSuccess, uploadsEnabled = true }: 
         <input
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           disabled={!uploadsEnabled}
         />
