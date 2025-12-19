@@ -1,96 +1,88 @@
 import React, { useEffect, useState } from "react";
 
-const tasks = [
-  "Pouringing drinks...",
+const funnyQuotes = [
+  "Pouring drinks...",
   "Finding embarrassing stories...",
   "Compiling heartfelt metaphors...",
-  "Syncing dance moves (low-bandwidth)...",
+  "Syncing dance moves (low bandwidth)...",
   "Scanning single friends for availability...",
-  "Assembling dad-joke fallback..."
+  "Assembling dad-joke fallback...",
+  "Verifying cake backup plan...",
+  "Loading best man speech generator...",
+  "Calculating optimal toast timing..."
 ];
 
 export default function LoadingTerminal({ onFinished }: { onFinished: () => void }) {
   const [progress, setProgress] = useState<number>(0);
-  const [lines, setLines] = useState<{ label: string; pct: number }[]>([]);
+  const [currentQuote, setCurrentQuote] = useState<string>(funnyQuotes[0]);
+  const [quoteIndex, setQuoteIndex] = useState<number>(0);
 
   useEffect(() => {
     let mounted = true;
-    // simulate progressive task completion: each tick we push next task with a percent then finalize
-    let tick = 0;
 
-    function nextStep() {
-      if (!mounted) return;
-      if (tick < tasks.length) {
-        const target = 90 - (tasks.length - tick) * 5; // stagger
-        const label = tasks[tick];
+    // Smoothly animate progress from 0 to 100 (slower for readability)
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          setTimeout(() => {
+            if (mounted) onFinished();
+          }, 800);
+          return 100;
+        }
+        // Slower increment for longer loading time
+        const increment = Math.random() * 1.5 + 0.8;
+        return Math.min(100, prev + increment);
+      });
+    }, 150);
 
-        // animate this task from 0 to target
-        let inner = 0;
-        const id = setInterval(() => {
-          inner += Math.random() * 8 + 3;
-          if (inner >= target) inner = target;
-          setLines((prev) => {
-            const copy = prev.slice();
-            copy[tick] = { label, pct: Math.round(inner) };
-            return copy;
-          });
-          setProgress((p) => Math.min(100, Math.max(p, Math.round((tick / tasks.length) * 100 + inner / tasks.length))));
-          if (inner >= target) {
-            clearInterval(id);
-            tick++;
-            setTimeout(nextStep, 400 + Math.random() * 600);
-          }
-        }, 140);
-      } else {
-        // finish final surge to 100
-        let final = progress;
-        const id2 = setInterval(() => {
-          final += Math.random() * 6 + 6;
-          if (final >= 100) final = 100;
-          setProgress(Math.round(final));
-          if (final >= 100) {
-            clearInterval(id2);
-            setTimeout(() => {
-              if (mounted) onFinished();
-            }, 700);
-          }
-        }, 120);
-      }
-    }
+    // Rotate through funny quotes (longer time to read each one)
+    const quoteInterval = setInterval(() => {
+      setQuoteIndex((prev) => {
+        const next = (prev + 1) % funnyQuotes.length;
+        setCurrentQuote(funnyQuotes[next]);
+        return next;
+      });
+    }, 2500);
 
-    // initialize lines array
-    setLines(tasks.map((t) => ({ label: t, pct: 0 })));
-    nextStep();
-
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      clearInterval(progressInterval);
+      clearInterval(quoteInterval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="terminal">
-      <div style={{display:"flex",justifyContent:"space-between", marginBottom:10}}>
-        <div style={{fontWeight:700}}>Best Man Installer v1.0</div>
-        <div style={{color:"#7fb1c8", fontSize:13}}>ready</div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>Best Man Installer v1.0</div>
+        <div style={{ color: "#7fb1c8", fontSize: 13 }}>initializing...</div>
       </div>
 
-      {lines.map((l, i) => (
-        <div className="progress-row" key={i}>
-          <div className="progress-label">[{i+1}/{lines.length}] {l.label}</div>
-          <div className="bar"><i style={{ width: `${l.pct}%` }} /></div>
-          <div style={{width:60, textAlign:"right", color:"#88b", fontSize:13}}>{l.pct}%</div>
+      {/* Single loading bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <div className="bar" style={{ flex: 1 }}>
+          <i style={{ width: `${progress}%` }} />
         </div>
-      ))}
-
-      <div style={{height:10}} />
-
-      <div style={{display:"flex", alignItems:"center", gap:12, marginTop:8}}>
-        <div className="progress-label">Overall</div>
-        <div className="bar"><i style={{ width: `${progress}%` }} /></div>
-        <div style={{width:60, textAlign:"right", color:"#88b", fontSize:13}}>{progress}%</div>
+        <div style={{ width: 50, textAlign: "right", color: "#88b", fontSize: 14, fontWeight: 600 }}>
+          {Math.round(progress)}%
+        </div>
       </div>
 
-      <div style={{marginTop:14, color:"#6f8da4", fontSize:13}}>
-        Tip: keep this up during your speech — reveal each section as the bar moves for comic timing.
+      {/* Rotating funny quote underneath */}
+      <div style={{ 
+        color: "#7fb1c8", 
+        fontSize: 14, 
+        minHeight: 20,
+        transition: "opacity 0.3s ease",
+        opacity: progress < 100 ? 1 : 0
+      }}>
+        {currentQuote}
+      </div>
+
+      <div style={{ marginTop: 20, color: "#6f8da4", fontSize: 13 }}>
+        💡 Tip: Keep this open during your speech for comic timing.
       </div>
     </div>
   );

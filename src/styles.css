@@ -26,10 +26,22 @@ body {
 .app {
   width: 100%;
   max-width: 480px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(2, 8, 23, 0.6);
-  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(2, 8, 23, 0.7);
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 640px) {
+  .app {
+    border-radius: 12px;
+    padding: 16px;
+  }
+  
+  body {
+    padding: 12px 8px;
+  }
 }
 
 /* Terminal look */
@@ -86,16 +98,22 @@ body {
 
 .card {
   background: var(--panel);
-  padding: 14px;
-  border-radius: 8px;
+  padding: 18px;
+  border-radius: 12px;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.03);
-  transition: transform 0.15s;
+  border: 2px solid rgba(109, 240, 201, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(2, 8, 23, 0.6);
+  box-shadow: 0 8px 24px rgba(2, 8, 23, 0.8);
+  border-color: rgba(109, 240, 201, 0.3);
+}
+
+.card:active {
+  transform: translateY(-2px);
 }
 
 .controls {
@@ -106,13 +124,32 @@ body {
 }
 
 button.primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, #6df0c9, #3ee7b6);
   color: #022;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 12px 20px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
   font-weight: 700;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(109, 240, 201, 0.3);
+  touch-action: manipulation;
+}
+
+button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(109, 240, 201, 0.4);
+}
+
+button.primary:active {
+  transform: translateY(0);
+}
+
+button.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .small {
@@ -151,10 +188,35 @@ button.primary {
 }
 
 .msg {
-  background: rgba(255, 255, 255, 0.02);
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.msg:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(109, 240, 201, 0.2);
+}
+
+/* Input fields */
+input, textarea {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px; /* Prevents zoom on iOS */
+  border-radius: 10px;
+  border: 2px solid #333;
+  background-color: #1a1a1a;
+  color: #fff;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(109, 240, 201, 0.1);
 }
 
 .upload-preview {
