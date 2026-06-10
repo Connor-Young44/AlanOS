@@ -1,6 +1,11 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { signInWithEmailAndPassword, signOut as firebaseSignOut } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  signInAnonymously,
+  onAuthStateChanged,
+} from "firebase/auth";
 import React from "react";
 
 // Mock Firebase auth
@@ -117,5 +122,122 @@ describe("AuthContext", () => {
     await waitFor(() => {
       expect(result.current.error).toBeNull();
     });
+  });
+
+  // ── signInAnonymously ─────────────────────────────────────────────────────
+
+  it("calls firebaseSignInAnonymously when signInAnonymously is called", async () => {
+    (signInAnonymously as jest.Mock).mockResolvedValue({
+      user: { uid: "anon-123", isAnonymous: true },
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await result.current.signInAnonymously();
+    expect(signInAnonymously).toHaveBeenCalled();
+  });
+
+  it("sets a helpful error message for auth/configuration-not-found", async () => {
+    (signInAnonymously as jest.Mock).mockRejectedValue({
+      code: "auth/configuration-not-found",
+      message: "Configuration not found",
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await expect(result.current.signInAnonymously()).rejects.toThrow();
+    await waitFor(() =>
+      expect(result.current.error).toMatch(/anonymous authentication is not enabled/i)
+    );
+  });
+
+  // ── isAdmin via auth state ────────────────────────────────────────────────
+
+  it("sets isAdmin=true when the ID token has admin custom claim", async () => {
+    const mockUser = {
+      uid: "admin-uid",
+      email: "other@example.com",
+      isAnonymous: false,
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: { admin: true } }),
+    };
+
+    (onAuthStateChanged as jest.Mock).mockImplementationOnce((_, callback) => {
+      callback(mockUser);
+      return jest.fn();
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAdmin).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  it("sets isAdmin=true when the user email matches ADMIN_EMAIL env var", async () => {
+    const mockUser = {
+      uid: "user-uid",
+      email: "admin@test.com", // matches the ADMIN_EMAIL in src/__mocks__/env.ts
+      isAnonymous: false,
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: {} }),
+    };
+
+    (onAuthStateChanged as jest.Mock).mockImplementationOnce((_, callback) => {
+      callback(mockUser);
+      return jest.fn();
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await waitFor(() => expect(result.current.isAdmin).toBe(true));
+  });
+
+  it("sets isAdmin=false when neither claim nor email match", async () => {
+    const mockUser = {
+      uid: "user-uid",
+      email: "guest@example.com",
+      isAnonymous: false,
+      getIdTokenResult: jest.fn().mockResolvedValue({ claims: {} }),
+    };
+
+    (onAuthStateChanged as jest.Mock).mockImplementationOnce((_, callback) => {
+      callback(mockUser);
+      return jest.fn();
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAdmin).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  // ── signOut error handling ────────────────────────────────────────────────
+
+  it("sets an error and re-throws when signOut fails", async () => {
+    (firebaseSignOut as jest.Mock).mockRejectedValue({
+      code: "auth/network-request-failed",
+      message: "Network request failed",
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => <AuthProvider>{children}</AuthProvider>,
+    });
+
+    await expect(result.current.signOut()).rejects.toThrow("Network request failed");
+    await waitFor(() =>
+      expect(result.current.error).toBe("Network request failed")
+    );
   });
 });

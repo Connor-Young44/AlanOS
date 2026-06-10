@@ -11,7 +11,6 @@ export default function PhotoProjector() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const indexParam = params.get("index");
-    const imagesParam = params.get("images");
 
     if (indexParam) {
       setCurrentIndex(parseInt(indexParam, 10) || 0);
@@ -30,6 +29,7 @@ export default function PhotoProjector() {
 
     // Listen for messages from the parent window
     const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
       if (event.data.type === "PHOTO_PROJECTOR_DATA") {
         setImages(event.data.images);
         setCurrentIndex(event.data.startIndex || 0);

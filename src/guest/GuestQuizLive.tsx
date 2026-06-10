@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { doc, onSnapshot, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { questions } from "../data/quizQuestions";
@@ -10,6 +10,7 @@ export default function GuestQuizLive() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const { currentUser } = useAuth();
+  const activeIdxRef = useRef<number | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "quiz", "state"), (snap) => {
@@ -17,19 +18,19 @@ export default function GuestQuizLive() {
         const data = snap.data();
         const newIdx = data.activeQuestionIndex ?? null;
         const newReveal = data.revealAnswer ?? false;
-        
-        // Reset vote state when question changes
-        if (newIdx !== activeIdx) {
+
+        if (newIdx !== activeIdxRef.current) {
           setSelectedAnswer(null);
           setHasVoted(false);
+          activeIdxRef.current = newIdx;
         }
-        
+
         setActiveIdx(newIdx);
         setReveal(newReveal);
       }
     });
     return () => unsub();
-  }, [activeIdx]);
+  }, []);
 
   if (activeIdx === null) {
     return (

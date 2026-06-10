@@ -60,13 +60,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           try {
             const tokenResult = await user.getIdTokenResult();
             const isAdminClaim = tokenResult.claims.admin === true;
-            
-            // Also check if email matches admin email from env
-            const adminEmail = env.ADMIN_EMAIL;
-            const isAdminEmail = user.email ? user.email === adminEmail : false;
-            
-            const adminStatus = isAdminClaim || isAdminEmail;
-            setIsAdmin(adminStatus);
+            const isAdminEmail = !!env.ADMIN_EMAIL && user.email === env.ADMIN_EMAIL;
+            setIsAdmin(isAdminClaim || isAdminEmail);
           } catch (err) {
             console.error("Failed to get ID token:", err);
             setIsAdmin(false);

@@ -176,18 +176,12 @@ export function openPhotoProjectorWindow(images: Photo[], startIndex: number = 0
     "toolbar=no,location=no,status=no,menubar=no,scrollbars=no,resizable=yes,width=1920,height=1080"
   );
 
-  // Send data via postMessage as backup
   if (projectorWindow) {
-    // Wait for window to load before sending message
-    setTimeout(() => {
+    projectorWindow.onload = () => {
       projectorWindow.postMessage(
-        {
-          type: "PHOTO_PROJECTOR_DATA",
-          images,
-          startIndex,
-        },
+        { type: "PHOTO_PROJECTOR_DATA", images, startIndex },
         window.location.origin
       );
-    }, 500);
+    };
   }
 }

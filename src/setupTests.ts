@@ -35,21 +35,23 @@ jest.mock("firebase/auth", () => ({
 // Mock firebase/firestore functions
 jest.mock("firebase/firestore", () => ({
   getFirestore: jest.fn(() => ({})),
-  doc: jest.fn(),
+  doc: jest.fn(() => ({})),
   getDoc: jest.fn(),
   getDocs: jest.fn(() => Promise.resolve({ docs: [] })),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
+  setDoc: jest.fn(() => Promise.resolve()),
+  updateDoc: jest.fn(() => Promise.resolve()),
+  deleteDoc: jest.fn(() => Promise.resolve()),
   addDoc: jest.fn(() => Promise.resolve({ id: "test-id" })),
-  collection: jest.fn(),
+  collection: jest.fn(() => ({})),
   query: jest.fn((col) => col),
   where: jest.fn(),
   orderBy: jest.fn(),
+  limit: jest.fn(() => ({})),
+  serverTimestamp: jest.fn(() => ({ _type: "serverTimestamp" })),
   Timestamp: {
     now: jest.fn(() => ({ seconds: Date.now() / 1000, nanoseconds: 0 })),
   },
-  onSnapshot: jest.fn(),
+  onSnapshot: jest.fn(() => jest.fn()),
 }));
 
 // Mock firebase/storage functions
