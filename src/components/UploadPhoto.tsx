@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { env } from "../lib/env";
 import { savePhotoUrl } from "../lib/photoStorage";
 
 interface UploadPhotoProps {
   onUploadSuccess?: () => void;
   uploadsEnabled?: boolean;
 }
-
-const CLOUD_NAME = env.CLOUDINARY_NAME;
-const UPLOAD_PRESET = "Unsigned_preset"; // Create this in Cloudinary dashboard
 
 // Helper to compress image before upload
 function compressImage(file: File, maxWidth = 1920, maxHeight = 1080, quality = 0.8): Promise<File> {

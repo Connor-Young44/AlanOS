@@ -10,7 +10,7 @@ import QuizProjector from "./components/QuizProjector";
 import PhotoProjector from "./components/PhotoProjector";
 import { useAuth } from "./contexts/AuthContext";
 
-type View = "admin" | "loading" | "menu" | "quiz" | "upload" | "message";
+type View = "loading" | "menu" | "quiz" | "upload" | "message";
 
 export default function App() {
   const [view, setView] = useState<View>("loading");
@@ -33,7 +33,7 @@ export default function App() {
       return;
     }
     
-    if (params.has("admin")) {
+    if (params.has("admin") || path === "/admin") {
       setRequestedAdmin(true);
     } else {
       setRequestedAdmin(false);
@@ -44,7 +44,8 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      if (params.has("admin")) {
+      const path = window.location.pathname;
+      if (params.has("admin") || path === "/admin") {
         setRequestedAdmin(true);
       } else {
         setRequestedAdmin(false);
@@ -97,14 +98,23 @@ export default function App() {
 
   // Admin route guard: if ?admin is in URL, show login or dashboard
   if (requestedAdmin) {
-    if (!isAdmin) {
+    // currentUser exists (signed in, non-anonymous) but token check still pending
+    if (currentUser && !currentUser.isAnonymous && !isAdmin) {
       return (
-        <div className="app">
-          <AdminLogin onSuccess={() => setView("admin")} />
+        <div className="app" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+          <div>Verifying credentials...</div>
         </div>
       );
     }
-    
+
+    if (!isAdmin) {
+      return (
+        <div className="app">
+          <AdminLogin onSuccess={() => {}} />
+        </div>
+      );
+    }
+
     return (
       <div className="app">
         <div className="content">
